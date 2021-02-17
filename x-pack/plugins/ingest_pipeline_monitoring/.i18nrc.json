@@ -1,0 +1,7 @@
+{
+  "prefix": "ingestPipelineMonitoring",
+  "paths": {
+    "ingestPipelineMonitoring": "."
+  },
+  "translations": ["translations/ja-JP.json"]
+}
