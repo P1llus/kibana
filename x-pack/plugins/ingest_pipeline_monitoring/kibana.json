@@ -4,6 +4,17 @@
   "kibanaVersion": "kibana",
   "server": true,
   "ui": true,
-  "requiredPlugins": ["navigation"],
-  "optionalPlugins": []
+  "requiredPlugins": [
+    "data",
+    "dataEnhanced",
+    "fleet",
+    "navigation"
+  ],
+  "requiredBundles": [
+    "kibanaUtils",
+    "kibanaReact"
+  ],
+  "optionalPlugins": [
+    "home"
+  ]
 }

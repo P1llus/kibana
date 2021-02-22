@@ -1,15 +1,18 @@
-import { i18n } from '@kbn/i18n';
 import { AppMountParameters, CoreSetup, CoreStart, Plugin } from '../../../../src/core/public';
 import {
   IngestPipelineMonitoringPluginSetup,
   IngestPipelineMonitoringPluginStart,
   AppPluginStartDependencies,
 } from './types';
+import { Storage } from '../../../../src/plugins/kibana_utils/public';
 import { PLUGIN_NAME } from '../common';
 
 export class IngestPipelineMonitoringPlugin
   implements Plugin<IngestPipelineMonitoringPluginSetup, IngestPipelineMonitoringPluginStart> {
+  private storage = new Storage(localStorage);
+
   public setup(core: CoreSetup): IngestPipelineMonitoringPluginSetup {
+    const storage = this.storage;
     // Register an application into the side navigation menu
     core.application.register({
       id: 'ingestPipelineMonitoring',
@@ -20,21 +23,12 @@ export class IngestPipelineMonitoringPlugin
         // Get start services as specified in kibana.json
         const [coreStart, depsStart] = await core.getStartServices();
         // Render the application
-        return renderApp(coreStart, depsStart as AppPluginStartDependencies, params);
+        return renderApp(coreStart, depsStart as AppPluginStartDependencies, params, storage);
       },
     });
 
     // Return methods that should be available to other plugins
-    return {
-      getGreeting() {
-        return i18n.translate('ingestPipelineMonitoring.greetingText', {
-          defaultMessage: 'Hello from {name}!',
-          values: {
-            name: PLUGIN_NAME,
-          },
-        });
-      },
-    };
+    return {};
   }
 
   public start(core: CoreStart): IngestPipelineMonitoringPluginStart {

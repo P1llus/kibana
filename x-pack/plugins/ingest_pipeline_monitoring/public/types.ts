@@ -1,8 +1,6 @@
 import { NavigationPublicPluginStart } from '../../../../src/plugins/navigation/public';
 
-export interface IngestPipelineMonitoringPluginSetup {
-  getGreeting: () => string;
-}
+export interface IngestPipelineMonitoringPluginSetup {}
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IngestPipelineMonitoringPluginStart {}
 

@@ -3,7 +3,7 @@ import { IRouter } from '../../../../../src/core/server';
 export function defineRoutes(router: IRouter) {
   router.get(
     {
-      path: '/api/ingest_pipeline_monitoring/example',
+      path: '/api/ingest_pipeline_monitoring/pipelines',
       validate: false,
     },
     async (context, request, response) => {
@@ -14,7 +14,7 @@ export function defineRoutes(router: IRouter) {
       });
       return response.ok({
         body: {
-          time: data.body,
+          data: data.body,
         },
       });
     }
