@@ -19,7 +19,6 @@ Some examples would be to identify if its cloud, which vendor, network, host, en
     `<query>
 Title: {title}
 Description: {description}
-Query: {query}
 </query>
 
 Go through the relevant title, description and data sources from the above query and create a collection of keywords specifically crafted to be used as a semantic search query.
@@ -35,7 +34,6 @@ Go through the relevant title, description and data sources from the above query
 U: <query>
 Title: Processes created by netsh
 Description: This search looks for processes launching netsh.exe to execute various commands via the netsh command-line utility. Netsh.exe is a command-line scripting utility that allows you to, either locally or remotely, display or modify the network configuration of a computer that is currently running. Netsh can be used as a persistence proxy technique to execute a helper .dll when netsh.exe is executed. In this search, we are looking for processes spawned by netsh.exe that are executing commands via the command line. Deprecated because we have another detection of the same type.
-Data Sources:
 </query>
 A: Please find the semantic_query keywords JSON object below:
 \`\`\`json
