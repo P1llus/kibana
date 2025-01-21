@@ -5,17 +5,18 @@
  * 2.0.
  */
 
-import assert from 'assert';
-import type { Subject } from 'rxjs';
 import type {
   AuthenticatedUser,
-  LoggerFactory,
   IClusterClient,
   KibanaRequest,
   Logger,
+  LoggerFactory,
 } from '@kbn/core/server';
-import { RuleMigrationsDataService } from './data/rule_migrations_data_service';
+import type { AuditLogger } from '@kbn/security-plugin-types-server';
+import assert from 'assert';
+import type { Subject } from 'rxjs';
 import type { RuleMigrationsDataClient } from './data/rule_migrations_data_client';
+import { RuleMigrationsDataService } from './data/rule_migrations_data_service';
 import type { RuleMigrationsTaskClient } from './task/rule_migrations_task_client';
 import { RuleMigrationsTaskService } from './task/rule_migrations_task_service';
 import type { SiemRuleMigrationsClientDependencies } from './types';
@@ -30,6 +31,7 @@ export interface SiemRuleMigrationsCreateClientParams {
   request: KibanaRequest;
   currentUser: AuthenticatedUser | null;
   spaceId: string;
+  auditLogger: AuditLogger | undefined;
   dependencies: SiemRuleMigrationsClientDependencies;
 }
 

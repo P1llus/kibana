@@ -6,12 +6,12 @@
  */
 
 import type { AuthenticatedUser, IScopedClusterClient, Logger } from '@kbn/core/server';
+import type { SiemRuleMigrationsClientDependencies } from '../types';
 import { RuleMigrationsDataIntegrationsClient } from './rule_migrations_data_integrations_client';
+import { RuleMigrationsDataLookupsClient } from './rule_migrations_data_lookups_client';
 import { RuleMigrationsDataPrebuiltRulesClient } from './rule_migrations_data_prebuilt_rules_client';
 import { RuleMigrationsDataResourcesClient } from './rule_migrations_data_resources_client';
 import { RuleMigrationsDataRulesClient } from './rule_migrations_data_rules_client';
-import { RuleMigrationsDataLookupsClient } from './rule_migrations_data_lookups_client';
-import type { SiemRuleMigrationsClientDependencies } from '../types';
 import type { AdapterId } from './rule_migrations_data_service';
 
 export type IndexNameProvider = () => Promise<string>;

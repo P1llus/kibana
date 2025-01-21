@@ -6,10 +6,10 @@
  */
 
 import type {
+  Duration,
   SearchHit,
   SearchRequest,
   SearchResponse,
-  Duration,
 } from '@elastic/elasticsearch/lib/api/types';
 import type {
   AuthenticatedUser,
@@ -17,8 +17,15 @@ import type {
   IScopedClusterClient,
   Logger,
 } from '@kbn/core/server';
+import type { AuditLogger } from '@kbn/security-plugin-types-server';
 import assert from 'assert';
-import type { Stored, SiemRuleMigrationsClientDependencies } from '../types';
+import {
+  AUDIT_CATEGORY,
+  AUDIT_OUTCOME,
+  siemMigrationAuditEventType,
+  type SiemMigrationAuditEvent,
+} from '../../audit';
+import type { SiemRuleMigrationsClientDependencies, Stored } from '../types';
 import type { IndexNameProvider } from './rule_migrations_data_client';
 
 const DEFAULT_PIT_KEEP_ALIVE: Duration = '30s' as const;
@@ -28,6 +35,7 @@ export class RuleMigrationsDataBaseClient {
 
   constructor(
     protected getIndexName: IndexNameProvider,
+    protected auditLogger: AuditLogger | undefined,
     protected currentUser: AuthenticatedUser,
     protected esScopedClient: IScopedClusterClient,
     protected logger: Logger,
@@ -46,6 +54,25 @@ export class RuleMigrationsDataBaseClient {
       with_profile_uid: true,
     });
     return users[username].profile_uid;
+  }
+
+  protected async createAuditEvent({ message, action, error, outcome }: SiemMigrationAuditEvent) {
+    if (this.auditLogger) {
+      const type = siemMigrationAuditEventType[action];
+      this.auditLogger.log({
+        message,
+        event: {
+          action,
+          category: [AUDIT_CATEGORY.DATABASE],
+          type: type ? [type] : undefined,
+          outcome: error ? AUDIT_OUTCOME.FAILURE : outcome ?? AUDIT_OUTCOME.SUCCESS,
+        },
+        error: error && {
+          code: error.name,
+          message: error.message,
+        },
+      });
+    }
   }
 
   protected processResponseHits<T extends object>(

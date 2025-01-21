@@ -12,23 +12,24 @@ import type {
   AggregationsMinAggregate,
   AggregationsStringTermsAggregate,
   AggregationsStringTermsBucket,
-  QueryDslQueryContainer,
   Duration,
+  QueryDslQueryContainer,
 } from '@elastic/elasticsearch/lib/api/types';
-import type { RuleMigrationFilters } from '../../../../../common/siem_migrations/types';
-import type { InternalUpdateRuleMigrationData, StoredRuleMigration } from '../types';
 import {
-  SiemMigrationStatus,
   RuleTranslationResult,
+  SiemMigrationStatus,
 } from '../../../../../common/siem_migrations/constants';
 import {
   type RuleMigration,
   type RuleMigrationTaskStats,
   type RuleMigrationTranslationStats,
 } from '../../../../../common/siem_migrations/model/rule_migration.gen';
+import type { RuleMigrationFilters } from '../../../../../common/siem_migrations/types';
+import { AUDIT_OUTCOME, SiemMigrationsAuditActions } from '../../audit';
+import type { InternalUpdateRuleMigrationData, StoredRuleMigration } from '../types';
 import { RuleMigrationsDataBaseClient } from './rule_migrations_data_base_client';
-import { getSortingOptions, type RuleMigrationSort } from './sort';
 import { conditions as searchConditions } from './search';
+import { getSortingOptions, type RuleMigrationSort } from './sort';
 
 export type CreateRuleMigrationInput = Omit<
   RuleMigration,
@@ -53,12 +54,17 @@ const DEFAULT_SEARCH_BATCH_SIZE = 500 as const;
 
 export class RuleMigrationsDataRulesClient extends RuleMigrationsDataBaseClient {
   /** Indexes an array of rule migrations to be processed */
-  async create(ruleMigrations: CreateRuleMigrationInput[]): Promise<void> {
+  async create(ruleMigrations: CreateRuleMigrationInput[], migrationId: string): Promise<void> {
     const index = await this.getIndexName();
     const profileId = await this.getProfileUid();
 
     let ruleMigrationsSlice: CreateRuleMigrationInput[];
     const createdAt = new Date().toISOString();
+    this.createAuditEvent({
+      action: SiemMigrationsAuditActions.SIEM_MIGRATION_CREATED,
+      message: `User created a new SIEM migration with id: ${migrationId}`,
+      outcome: AUDIT_OUTCOME.SUCCESS,
+    });
     while ((ruleMigrationsSlice = ruleMigrations.splice(0, BULK_MAX_SIZE)).length) {
       await this.esClient
         .bulk({
@@ -77,18 +83,32 @@ export class RuleMigrationsDataRulesClient extends RuleMigrationsDataBaseClient 
         })
         .catch((error) => {
           this.logger.error(`Error creating rule migrations: ${error.message}`);
+          this.createAuditEvent({
+            action: SiemMigrationsAuditActions.SIEM_MIGRATION_CREATED,
+            message: `User created a new SIEM migration with id: ${migrationId}`,
+            outcome: AUDIT_OUTCOME.FAILURE,
+            error,
+          });
           throw error;
         });
     }
   }
 
   /** Updates an array of rule migrations to be processed */
-  async update(ruleMigrations: InternalUpdateRuleMigrationData[]): Promise<void> {
+  async update(
+    ruleMigrations: InternalUpdateRuleMigrationData[],
+    migrationId: string
+  ): Promise<void> {
     const index = await this.getIndexName();
     const profileId = await this.getProfileUid();
 
     let ruleMigrationsSlice: InternalUpdateRuleMigrationData[];
     const updatedAt = new Date().toISOString();
+    this.createAuditEvent({
+      action: SiemMigrationsAuditActions.SIEM_MIGRATION_UPDATED,
+      message: `User updated SIEM migration with id: ${migrationId}`,
+      outcome: AUDIT_OUTCOME.SUCCESS,
+    });
     while ((ruleMigrationsSlice = ruleMigrations.splice(0, BULK_MAX_SIZE)).length) {
       await this.esClient
         .bulk({
@@ -109,6 +129,11 @@ export class RuleMigrationsDataRulesClient extends RuleMigrationsDataBaseClient 
         })
         .catch((error) => {
           this.logger.error(`Error updating rule migrations: ${error.message}`);
+          this.createAuditEvent({
+            action: SiemMigrationsAuditActions.SIEM_MIGRATION_UPDATED,
+            message: `User updated SIEM migration with id: ${migrationId}`,
+            outcome: AUDIT_OUTCOME.FAILURE,
+          });
           throw error;
         });
     }
@@ -127,8 +152,18 @@ export class RuleMigrationsDataRulesClient extends RuleMigrationsDataBaseClient 
       .search<RuleMigration>({ index, query, sort, from, size })
       .catch((error) => {
         this.logger.error(`Error searching rule migrations: ${error.message}`);
+        this.createAuditEvent({
+          action: SiemMigrationsAuditActions.SIEM_MIGRATION_GET_RULES,
+          message: `User retrieved rules from migration with id: ${migrationId}`,
+          outcome: AUDIT_OUTCOME.FAILURE,
+        });
         throw error;
       });
+    this.createAuditEvent({
+      action: SiemMigrationsAuditActions.SIEM_MIGRATION_GET_RULES,
+      message: `User retrieved rules from migration with id: ${migrationId}`,
+      outcome: AUDIT_OUTCOME.SUCCESS,
+    });
     return {
       total: this.getTotalHits(result),
       data: this.processResponseHits(result),
